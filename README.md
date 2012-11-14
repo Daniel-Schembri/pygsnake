@@ -1,4 +1,4 @@
-pygsnake
+PyGSnake
 ========
 
-A simple snake game in Python with Pygame
+A simple snake game in Python with Pygame.
