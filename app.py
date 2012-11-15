@@ -20,106 +20,65 @@ class Snake:
     The snake
     """
     def __init__(self):
+        self.grow = False
+        self.direction = 1
+        self.tiles = {}
         self.reset()
 
     def reset(self):
         """
         reset snake
         """
-        self.lastdirection = 'right'
-        self.direction = 'right'
-        self.tiles = [[18, 20, 0], [19, 20, 0], [20, 20, 0]]
+        self.grow = False
+        self.direction = 1
+        self.tiles = [[18, 20, 1], [19, 20, 1], [20, 20, 1]]
 
-    def move_right(self):
+    def get_pos(self):
         """
-        set direction of snake to right
+        returns the position of the head of the snake
         """
-        if self.direction == 'left':
-            return False
-        else:
-            self.lastdirection = self.direction
-            self.direction = 'right'
-            return True
+        return self.tiles[-1]
 
-    def move_left(self):
+    def bite(self):
         """
-        set direction of snake to right
+        checks if you bite yourself in the tail
         """
-        if self.direction == 'right':
-            return False
-        else:
-            self.lastdirection = self.direction
-            self.direction = 'left'
-            return True
+        bite = 0
+        for tile1 in self.tiles:
+            for tile2 in self.tiles:
+                if tile1[0] == tile2[0] and tile1[1] == tile2[1]:
+                    bite = bite + 1
+            if bite > 1:
+                return True
+            bite = 0
+        return False
 
-    def move_up(self):
-        """
-        set direction of snake to right
-        """
-        if self.direction == 'down':
-            return False
-        else:
-            self.lastdirection = self.direction
-            self.direction = 'up'
-            return True
-
-    def move_down(self):
-        """
-        set direction of snake to right
-        """
-        if self.direction == 'up':
-            return False
-        else:
-            self.lastdirection = self.direction
-            self.direction = 'down'
-            return True
-
-    def move(self, apple=False):
+    def move(self):
         """
         add a new pixel to the snakes head and delete the last one
         """
         # add new tile to front
-        head = self.tiles[-1]
-        if head in self.tiles[:-1]:
-            return False
-        if self.direction == 'right':
-            if self.lastdirection == 'right':
-                self.tiles.append([head[0] + 1, head[1], '-'])  #rr
-            if self.lastdirection == 'up':
-                self.tiles.append([head[0] + 1, head[1], 'ur'])
-            if self.lastdirection == 'down':
-                self.tiles.append([head[0] + 1, head[1], 'dr'])
-        elif self.direction == 'left':
-            if self.lastdirection == 'left':
-                self.tiles.append([head[0] - 1, head[1], '-'])  #ll
-            if self.lastdirection == 'up':
-                self.tiles.append([head[0] - 1, head[1], 'lu'])
-            if self.lastdirection == 'down':
-                self.tiles.append([head[0] - 1, head[1], 'ld'])
-        elif self.direction == 'up':
-            if self.lastdirection == 'right':
-                self.tiles.append([head[0], head[1] - 1, 'ur'])
-            if self.lastdirection == 'left':
-                self.tiles.append([head[0], head[1] - 1, 'ul'])
-            if self.lastdirection == 'up':
-                self.tiles.append([head[0], head[1] - 1, '|']) #uu
-        elif self.direction == 'down':
-            if self.lastdirection == 'right':
-                self.tiles.append([head[0], head[1] + 1, 'dr'])
-            if self.lastdirection == 'left':
-                self.tiles.append([head[0], head[1] + 1, 'dl'])
-            if self.lastdirection == 'down':
-                self.tiles.append([head[0], head[1] + 1, '|']) #dd
+        if self.direction == 0:
+            self.tiles.append([self.tiles[-1][0] - 1, self.tiles[-1][1]])
+        elif self.direction == 1:
+            self.tiles.append([self.tiles[-1][0] + 1, self.tiles[-1][1]])
+        elif self.direction == 2:
+            self.tiles.append([self.tiles[-1][0], self.tiles[-1][1] - 1])
+        elif self.direction == 3:
+            self.tiles.append([self.tiles[-1][0], self.tiles[-1][1] + 1])
 
         # check collision
-        if head[0] < 0 or head[0] > 41:
+        if self.tiles[-1][0] < 0 or self.tiles[-1][0] > 41:
             return False
-        elif head[1] < 0 or head[1] > 41:
+        elif self.tiles[-1][1] < 0 or self.tiles[-1][1] > 41:
+            return False
+        elif self.bite():
             return False
         else:
             # delete last tile
-            if not apple:
+            if not self.grow:
                 self.tiles.pop(0)
+            self.grow = False
             return True
 
 
@@ -138,11 +97,13 @@ class App:
         self.color_green = pygame.Color(0, 255, 0)
         self.color_blue = pygame.Color(0, 0, 255)
         self.color_black = pygame.Color(0, 0, 0)
+        self.color_grey = pygame.Color(128, 128, 128)
 
-        self.score = 0
-        self.apple = [randrange(41), randrange(41)]
         self.snake = Snake()
-
+        self.highscore = '0 (None)'
+        self.score = 0
+        self.gameover = False
+        self.apple = [randrange(41), randrange(41)]
         self.reset()
 
     def write_highscore(self):
@@ -176,13 +137,13 @@ class App:
                 sys.exit()
             elif event.type == KEYDOWN:
                 if event.key == K_LEFT:
-                    self.gameover = not self.snake.move_left()
+                    self.snake.direction = 0
                 elif event.key == K_RIGHT:
-                    self.gameover = not self.snake.move_right()
+                    self.snake.direction = 1
                 elif event.key == K_UP:
-                    self.gameover = not self.snake.move_up()
+                    self.snake.direction = 2
                 elif event.key == K_DOWN:
-                    self.gameover = not self.snake.move_down()
+                    self.snake.direction = 3
                 elif event.key == K_ESCAPE:
                     pygame.event.post(pygame.event.Event(QUIT))
 
@@ -191,63 +152,70 @@ class App:
         contains the gameloop
         """
         while True:
-            self.surface.fill(self.color_black)
-            self.draw_apple()
-            if (self.apple[0] == self.snake.tiles[-1][0] and
-                self.apple[1] == self.snake.tiles[-1][1]):
+            self.eventhandler()
+            self.gameover = not self.snake.move()
+
+            if self.snake.get_pos() == self.apple:
                 self.score = self.score + 1
                 self.apple = [randrange(41), randrange(41)]
-                self.gameover = not self.snake.move(apple=True)
-            else:
-                self.gameover = not self.snake.move()
+                self.snake.grow = True
 
-            for tile in self.snake.tiles:
-                if tile[2] == '-':
-                    pygame.draw.rect(self.surface,
+            # draw grid
+            #for x in range(42):
+            #    pygame.draw.line(self.surface, self.color_grey, (x * 10, 24), (x * 10, 444), 1)
+            #for y in range(42):
+            #    pygame.draw.line(self.surface, self.color_grey, (0, y * 10 + 24), (420, y * 10 + 24), 1)
+
+            self.surface.fill(self.color_black)
+            self.draw_apple()
+
+            for i in range(len(self.snake.tiles)):
+                # paint dot
+                pygame.draw.rect(self.surface,
+                                 self.color_red,
+                                 (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 26, 6, 6))
+                # paint the part that connects to the next dot
+                if i > 0:
+                    if self.snake.tiles[i - 1][0] < self.snake.tiles[i][0]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10, tile[1] * 10 + 25, 10, 8))
-                if tile[2] == 'lu':
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                    if self.snake.tiles[i - 1][0] > self.snake.tiles[i][0]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10, tile[1] * 10 + 25, 9, 8))
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10 + 8, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                    if self.snake.tiles[i - 1][1] < self.snake.tiles[i][1]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 1))
-                if tile[2] == 'ld':
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 24, 6, 2))
+                    if self.snake.tiles[i - 1][1] > self.snake.tiles[i][1]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10, tile[1] * 10 + 25, 9, 8))
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 32, 6, 2))
+                # paint the part that connects to the previous dot
+                if i < len(self.snake.tiles) - 1:
+                    if self.snake.tiles[i + 1][0] < self.snake.tiles[i][0]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 33, 8, 1))
-                if tile[2] == 'ru':
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                    if self.snake.tiles[i + 1][0] > self.snake.tiles[i][0]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == 'rd':
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10 + 8, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                    if self.snake.tiles[i + 1][1] < self.snake.tiles[i][1]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == '|':
-                    pygame.draw.rect(self.surface,
+                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 24, 6, 2))
+                    if self.snake.tiles[i + 1][1] > self.snake.tiles[i][1]:
+                        pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == 'ul':
-                    pygame.draw.rect(self.surface,
-                                     self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == 'ur':
-                    pygame.draw.rect(self.surface,
-                                     self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == 'dl':
-                    pygame.draw.rect(self.surface,
-                                     self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
-                if tile[2] == 'dr':
-                    pygame.draw.rect(self.surface,
-                                     self.color_red,
-                                     (tile[0] * 10 + 1, tile[1] * 10 + 24, 8, 10))
+                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 32, 6, 2))
+            # draw head
+            pygame.draw.circle(self.surface,
+                               self.color_red,
+                               (self.snake.tiles[-1][0] * 10 + 5,
+                                self.snake.tiles[-1][1] * 10 + 5 + 24),
+                               5, 0)
 
             score_text = 'Score: ' + str(self.score) + \
                          ' - Highscore: ' + self.highscore
@@ -261,8 +229,6 @@ class App:
             pygame.display.update()
             pygame.display.flip()
             self.fps_clock.tick(10 + self.score / 5)
-
-            self.eventhandler()
 
             if self.gameover:
                 break
