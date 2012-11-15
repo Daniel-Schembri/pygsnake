@@ -91,7 +91,7 @@ class App:
         self.fps_clock = pygame.time.Clock()
         self.surface = pygame.display.set_mode((420, 444), DOUBLEBUF)
         pygame.display.set_caption('PyGSnake')
-        self.font_obj = pygame.font.Font('freesansbold.ttf', 24)
+        self.font_obj = pygame.font.Font('freesansbold.ttf', 22)
 
         self.color_red = pygame.Color(255, 0, 0)
         self.color_green = pygame.Color(0, 255, 0)
@@ -104,6 +104,7 @@ class App:
         self.score = 0
         self.gameover = False
         self.apple = [randrange(41), randrange(41)]
+        self.oldapple = self.apple
         self.reset()
 
     def write_highscore(self):
@@ -137,13 +138,17 @@ class App:
                 sys.exit()
             elif event.type == KEYDOWN:
                 if event.key == K_LEFT:
-                    self.snake.direction = 0
+                    if self.snake.direction != 1:
+                        self.snake.direction = 0
                 elif event.key == K_RIGHT:
-                    self.snake.direction = 1
+                    if self.snake.direction != 0:
+                        self.snake.direction = 1
                 elif event.key == K_UP:
-                    self.snake.direction = 2
+                    if self.snake.direction != 3:
+                        self.snake.direction = 2
                 elif event.key == K_DOWN:
-                    self.snake.direction = 3
+                    if self.snake.direction != 2:
+                        self.snake.direction = 3
                 elif event.key == K_ESCAPE:
                     pygame.event.post(pygame.event.Event(QUIT))
 
@@ -157,8 +162,8 @@ class App:
 
             if self.snake.get_pos() == self.apple:
                 self.score = self.score + 1
+                self.oldapple = self.apple
                 self.apple = [randrange(41), randrange(41)]
-                self.snake.grow = True
 
             # draw grid
             #for x in range(42):
@@ -216,6 +221,16 @@ class App:
                                (self.snake.tiles[-1][0] * 10 + 5,
                                 self.snake.tiles[-1][1] * 10 + 5 + 24),
                                5, 0)
+            if self.oldapple in self.snake.tiles:
+                pygame.draw.circle(self.surface,
+                                   self.color_red,
+                                   (self.oldapple[0] * 10 + 5,
+                                    self.oldapple[1] * 10 + 5 + 24),
+                                   5, 0)
+
+            if self.snake.tiles[0] == self.oldapple:
+                self.snake.grow = True
+                self.oldapple = [50, 50]
 
             score_text = 'Score: ' + str(self.score) + \
                          ' - Highscore: ' + self.highscore
@@ -223,12 +238,14 @@ class App:
                                                False,
                                                self.color_blue)
             msg_rect = msg_surface.get_rect()
-            msg_rect.topleft = (0, 0)
+            msg_rect.topleft = (5, 0)
             self.surface.blit(msg_surface, msg_rect)
+
+            pygame.draw.line(self.surface, self.color_grey, (0, 24), (420, 24), 1)
 
             pygame.display.update()
             pygame.display.flip()
-            self.fps_clock.tick(10 + self.score / 5)
+            self.fps_clock.tick(5 + self.score / 5)
 
             if self.gameover:
                 break
