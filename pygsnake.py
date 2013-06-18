@@ -1,28 +1,47 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+
 """
 pygsnake - A simple snake game in Python with Pygame
 
-Created on Mon Oct 29 07:48:38 2012
+Usage:
+  pygsnake.py (-h | --help)
+  pygsnake.py --version
 
-@author: XenGi
+Options:
+  -h, --help    Show this screen.
+  --version     Show version.
+
+Created on Mon Oct 29 07:48:38 2012
 """
 
+__author__ = "Ricardo Band"
+__copyright__ = "Copyright 2013, Ricardo Band"
+__credits__ = ["Ricardo Band",]
+__license__ = "GPLv3+"
+__version__ = "0.9.0"
+__maintainer__ = "Ricardo Band"
+__email__ = "me@xengi.de"
+__status__ = "Production"
+
+import os
 import sys
+import getpass
+import random
+
+import docopt
 import pygame
 from pygame.locals import *
-from random import randrange
-import getpass
 
 
-class Snake:
+class Snake(object):
     """
     The snake
     """
     def __init__(self):
         self.grow = False
         self.direction = 1
-        self.tiles = {}
+        self.tiles = []
         self.reset()
 
     def reset(self):
@@ -82,7 +101,7 @@ class Snake:
             return True
 
 
-class App:
+class Game(object):
     """
     The game
     """
@@ -103,7 +122,7 @@ class App:
         self.highscore = '0 (None)'
         self.score = 0
         self.gameover = False
-        self.apple = [randrange(41), randrange(41)]
+        self.apple = [random.randrange(41), random.randrange(41)]
         self.oldapple = self.apple
         self.reset()
 
@@ -112,11 +131,11 @@ class App:
         write the highscore and username to the highscore file
         """
         try:
-            hfile = open('highscore', 'w')
-            hfile.write(str(self.score) + ' (' + getpass.getuser() + ')')
+            hfile = open(os.path.expanduser('~/.pygsnakescore'), 'w')
+            hfile.write('%d (%s)' % (self.score, getpass.getuser()))
             hfile.close()
         except IOError, exc:
-            print 'Can\'t write highscore to file.', exc.message
+            print 'Can\'t write highscore to file:', exc.message
 
     def draw_apple(self):
         """
@@ -163,13 +182,7 @@ class App:
             if self.snake.get_pos() == self.apple:
                 self.score = self.score + 1
                 self.oldapple = self.apple
-                self.apple = [randrange(41), randrange(41)]
-
-            # draw grid
-            #for x in range(42):
-            #    pygame.draw.line(self.surface, self.color_grey, (x * 10, 24), (x * 10, 444), 1)
-            #for y in range(42):
-            #    pygame.draw.line(self.surface, self.color_grey, (0, y * 10 + 24), (420, y * 10 + 24), 1)
+                self.apple = [random.randrange(41), random.randrange(41)]
 
             self.surface.fill(self.color_black)
             self.draw_apple()
@@ -178,62 +191,79 @@ class App:
                 # paint dot
                 pygame.draw.rect(self.surface,
                                  self.color_red,
-                                 (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 26, 6, 6))
+                                 (self.snake.tiles[i][0] * 10 + 2,
+                                  self.snake.tiles[i][1] * 10 + 26, 6, 6))
                 # paint the part that connects to the next dot
                 if i > 0:
                     if self.snake.tiles[i - 1][0] < self.snake.tiles[i][0]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                                     (self.snake.tiles[i][0] * 10,
+                                      self.snake.tiles[i][1] * 10 + 26,
+                                      2, 6))
                     if self.snake.tiles[i - 1][0] > self.snake.tiles[i][0]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 8, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                                     (self.snake.tiles[i][0] * 10 + 8,
+                                      self.snake.tiles[i][1] * 10 + 26,
+                                      2, 6))
                     if self.snake.tiles[i - 1][1] < self.snake.tiles[i][1]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 24, 6, 2))
+                                     (self.snake.tiles[i][0] * 10 + 2,
+                                      self.snake.tiles[i][1] * 10 + 24,
+                                      6, 2))
                     if self.snake.tiles[i - 1][1] > self.snake.tiles[i][1]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 32, 6, 2))
+                                     (self.snake.tiles[i][0] * 10 + 2,
+                                      self.snake.tiles[i][1] * 10 + 32,
+                                      6, 2))
                 # paint the part that connects to the previous dot
                 if i < len(self.snake.tiles) - 1:
                     if self.snake.tiles[i + 1][0] < self.snake.tiles[i][0]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                                     (self.snake.tiles[i][0] * 10,
+                                      self.snake.tiles[i][1] * 10 + 26,
+                                      2, 6))
                     if self.snake.tiles[i + 1][0] > self.snake.tiles[i][0]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 8, self.snake.tiles[i][1] * 10 + 26, 2, 6))
+                                     (self.snake.tiles[i][0] * 10 + 8,
+                                      self.snake.tiles[i][1] * 10 + 26,
+                                      2, 6))
                     if self.snake.tiles[i + 1][1] < self.snake.tiles[i][1]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 24, 6, 2))
+                                     (self.snake.tiles[i][0] * 10 + 2,
+                                      self.snake.tiles[i][1] * 10 + 24,
+                                      6, 2))
                     if self.snake.tiles[i + 1][1] > self.snake.tiles[i][1]:
                         pygame.draw.rect(self.surface,
                                      self.color_red,
-                                     (self.snake.tiles[i][0] * 10 + 2, self.snake.tiles[i][1] * 10 + 32, 6, 2))
+                                     (self.snake.tiles[i][0] * 10 + 2,
+                                      self.snake.tiles[i][1] * 10 + 32,
+                                      6, 2))
             # draw head
             pygame.draw.circle(self.surface,
                                self.color_red,
                                (self.snake.tiles[-1][0] * 10 + 5,
                                 self.snake.tiles[-1][1] * 10 + 5 + 24),
-                               5, 0)
+                                5, 0)
             if self.oldapple in self.snake.tiles:
                 pygame.draw.circle(self.surface,
                                    self.color_red,
                                    (self.oldapple[0] * 10 + 5,
                                     self.oldapple[1] * 10 + 5 + 24),
-                                   5, 0)
+                                    5, 0)
 
             if self.snake.tiles[0] == self.oldapple:
                 self.snake.grow = True
                 self.oldapple = [50, 50]
 
-            score_text = 'Score: ' + str(self.score) + \
-                         ' - Highscore: ' + self.highscore
+            score_text = 'Score: %d - Highscore: %s' % (self.score,
+                                                        self.highscore)
             msg_surface = self.font_obj.render(score_text,
                                                False,
                                                self.color_blue)
@@ -241,7 +271,8 @@ class App:
             msg_rect.topleft = (5, 0)
             self.surface.blit(msg_surface, msg_rect)
 
-            pygame.draw.line(self.surface, self.color_grey, (0, 24), (420, 24), 1)
+            pygame.draw.line(self.surface, self.color_grey,
+                             (0, 24), (420, 24), 1)
 
             pygame.display.update()
             pygame.display.flip()
@@ -253,13 +284,13 @@ class App:
         if self.score > int(self.highscore.split()[0]):
             self.write_highscore()
         msg_surface1 = self.font_obj.render('Game Over',
-                                           False,
-                                           self.color_blue)
+                                            False,
+                                            self.color_blue)
         msg_rect1 = msg_surface1.get_rect()
         msg_rect1.center = (210, 210)
         msg_surface2 = self.font_obj.render('Continue? [Y/N]',
-                                           False,
-                                           self.color_blue)
+                                            False,
+                                            self.color_blue)
         msg_rect2 = msg_surface2.get_rect()
         msg_rect2.center = (210, 258)
         self.surface.blit(msg_surface1, msg_rect1)
@@ -281,7 +312,7 @@ class App:
         """
         self.score = 0
         try:
-            hfile = open('highscore', 'r')
+            hfile = open(os.path.expanduser('~/.pygsnakescore'), 'r')
             self.highscore = hfile.read()
             hfile.close()
         except IOError:
@@ -289,12 +320,13 @@ class App:
         self.gameover = False
 
         self.snake.reset()
-        self.apple = [randrange(41), randrange(41)]
+        self.apple = [random.randrange(41), random.randrange(41)]
 
 
 if __name__ == '__main__':
-    APP = App()
+    ARGS = docopt.docopt(__doc__, version='PyGSnake v' % __version__)
+    GAME = Game()
     GAMELOOP = True
     while(GAMELOOP):
-        GAMELOOP = APP.run()
-        APP.reset()
+        GAMELOOP = GAME.run()
+        GAME.reset()
