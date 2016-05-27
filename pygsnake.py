@@ -5,7 +5,7 @@
 pygsnake - A simple snake game in Python with Pygame
 
 Usage:
-  pygsnake.py (-h | --help)
+  pygsnake.py [-h | --help]
   pygsnake.py --version
 
 Options:
@@ -324,7 +324,7 @@ class Game(object):
 
 
 if __name__ == '__main__':
-    ARGS = docopt.docopt(__doc__, version='PyGSnake v' % __version__)
+    ARGS = docopt.docopt(__doc__, version='PyGSnake v' + __version__)
     GAME = Game()
     GAMELOOP = True
     while(GAMELOOP):
